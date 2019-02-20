@@ -4,7 +4,7 @@
 
 #define DAMPING 0.01f 
 #define TIME_STEPSIZE2 0.5f*0.5f
-#define CONSTRAINT_ITERATIONS 25 
+#define CONSTRAINT_ITERATIONS 5
 #define GLM_PRECISION_HIGHP_FLOAT
 
 using namespace glm;
@@ -214,11 +214,13 @@ public:
 		{
 			for(int y=0; y<num_particles_height-1; y++)
 			{
-				vec3 color(0,0,0);
-				if (x%2) 
-					color = vec3(0.2f,0.2f,0.8f);
-				else
-					color = vec3(1.0f,1.0f,1.0f);
+//                vec3 color(0,0,0);
+//                if (x%2)
+//                    color = vec3(0.2f,0.2f,0.8f);
+//                else
+//                    color = vec3(1.0f,1.0f,1.0f);
+                vec3 color(0.8f);
+                
 				drawTriangle(getParticle(x+1,y),getParticle(x,y),getParticle(x,y+1),color);
 				drawTriangle(getParticle(x+1,y+1),getParticle(x+1,y),getParticle(x,y+1),color);
 			}
