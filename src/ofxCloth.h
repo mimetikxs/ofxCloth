@@ -18,7 +18,8 @@ class Clothing
 	int getPlaneHeight();
 	vector<float> getRadiusSphere();
 
-	void update();
+	void updatePhysics();
+    void updateMesh();
 	void setPositionSphere(vector<ofVec3f> pos);
 	void setRadiusSphere( vector<float> radius );
         void addForce( ofVec3f dir, float time  );

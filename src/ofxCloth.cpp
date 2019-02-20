@@ -44,8 +44,12 @@ vector<float> Clothing::getRadiusSphere(){
 	return ball_radius;
 }
 
-void Clothing::update(){
+void Clothing::updatePhysics(){
 	cloth1->timeStep();
+}
+
+void Clothing::updateMesh() {
+    cloth1->updateMesh();
 }
 
 void Clothing::addForce( ofVec3f dir, float time  ){
@@ -77,10 +81,10 @@ void Clothing::constrainPoints( int index, ofVec3f offSetPos ) {
 
 void Clothing::drawCloth( bool wire ) {
 	ofPushMatrix();
-	if(wire)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	cloth1->drawShaded();
+    if(wire)
+        cloth1->draw(OF_MESH_WIREFRAME);
+    else
+        cloth1->draw(OF_MESH_FILL);
+	
 	ofPopMatrix();
 }

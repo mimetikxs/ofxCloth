@@ -16,8 +16,11 @@ private:
 	vec3 pos;
 	vec3 old_pos; 
 	vec3 acceleration; //
-	vec3 accumulated_normal; // 
+	vec3 accumulated_normal; //
+    
 public:
+    vec2 uv;
+    
 	Particle(vec3 pos) : pos(pos), old_pos(pos),acceleration(vec3(0,0,0)), mass(1), movable(true), accumulated_normal(vec3(0,0,0)){}
 	Particle(){}
 
@@ -89,7 +92,8 @@ private:
 	int num_particles_width;
 	int num_particles_height; 
 	std::vector<Particle> particles; 
-	std::vector<Constraint> constraints; 
+	std::vector<Constraint> constraints;
+    ofMesh mesh;
 
 	Particle* getParticle(int x, int y) {return &particles[y*num_particles_width + x];}
 
@@ -117,18 +121,35 @@ private:
 		p3->addForce(force);
 	}
 
-	void drawTriangle(Particle *p1, Particle *p2, Particle *p3, const vec3 color)
+    void drawTriangle(Particle *p1, Particle *p2, Particle *p3, const ofFloatColor color)
 	{
-		glColor3fv( value_ptr(color) );
-
-		glNormal3fv(value_ptr(normalize(p1->getNormal())));
-		glVertex3fv(value_ptr(p1->getPos() ));
-
-		glNormal3fv(value_ptr(normalize(p2->getNormal()) ));
-		glVertex3fv(value_ptr(p2->getPos() ));
-
-		glNormal3fv(value_ptr(normalize(p3->getNormal()) ));
-		glVertex3fv(value_ptr(p3->getPos() ));
+//        glColor3fv( value_ptr(color) );
+//
+//        glNormal3fv(value_ptr(normalize(p1->getNormal())));
+//        glVertex3fv(value_ptr(p1->getPos() ));
+//
+//        glNormal3fv(value_ptr(normalize(p2->getNormal()) ));
+//        glVertex3fv(value_ptr(p2->getPos() ));
+//
+//        glNormal3fv(value_ptr(normalize(p3->getNormal()) ));
+//        glVertex3fv(value_ptr(p3->getPos() ));
+        
+        // TODO: use vbo
+        
+        mesh.addVertex(p1->getPos());
+        mesh.addNormal(normalize(p1->getNormal()));
+        mesh.addTexCoord(p1->uv);
+        mesh.addColor(color);
+        
+        mesh.addVertex(p2->getPos());
+        mesh.addNormal(normalize(p2->getNormal()));
+        mesh.addTexCoord(p2->uv);
+        mesh.addColor(color);
+        
+        mesh.addVertex(p3->getPos());
+        mesh.addNormal(normalize(p3->getNormal()));
+        mesh.addTexCoord(p3->uv);
+        mesh.addColor(color);
 	}
 
 public:
@@ -142,7 +163,11 @@ public:
 				vec3 pos = vec3(width * (x/(float)num_particles_width),
 								-height * (y/(float)num_particles_height),
 								0);
-				particles[y*num_particles_width+x]= Particle(pos);
+                
+                Particle p = Particle(pos);
+                p.uv = vec2(float(x)/num_particles_width, float(y)/num_particles_height);
+                
+				particles[y*num_particles_width+x]= p;
 			}
 		}
 
@@ -164,7 +189,9 @@ public:
 				if (x<num_particles_width-2) makeConstraint(getParticle(x,y),getParticle(x+2,y));
 				if (y<num_particles_height-2) makeConstraint(getParticle(x,y),getParticle(x,y+2));
 				if (x<num_particles_width-2 && y<num_particles_height-2) makeConstraint(getParticle(x,y),getParticle(x+2,y+2));
-				if (x<num_particles_width-2 && y<num_particles_height-2) makeConstraint(getParticle(x+2,y),getParticle(x,y+2));			}
+				if (x<num_particles_width-2 && y<num_particles_height-2) makeConstraint(getParticle(x+2,y),getParticle(x,y+2));
+                
+            }
 		}
 	}
 
@@ -175,6 +202,48 @@ public:
 		getParticle(0+index ,0)->offsetPos(offSetPos);
 		getParticle(0+index ,0)->makeUnmovable(); 
 	}
+    
+    void updateMesh() {
+        std::vector<Particle>::iterator particle;
+        for(particle = particles.begin(); particle != particles.end(); particle++)
+        {
+            (*particle).resetNormal();
+        }
+        
+        for(int x = 0; x<num_particles_width-1; x++)
+        {
+            for(int y=0; y<num_particles_height-1; y++)
+            {
+                vec3 normal = calcTriangleNormal(getParticle(x+1,y),getParticle(x,y),getParticle(x,y+1));
+                getParticle(x+1,y)->addToNormal(normal);
+                getParticle(x,y)->addToNormal(normal);
+                getParticle(x,y+1)->addToNormal(normal);
+                
+                normal = calcTriangleNormal(getParticle(x+1,y+1),getParticle(x+1,y),getParticle(x,y+1));
+                getParticle(x+1,y+1)->addToNormal(normal);
+                getParticle(x+1,y)->addToNormal(normal);
+                getParticle(x,y+1)->addToNormal(normal);
+            }
+        }
+        
+        mesh.clear();
+        mesh.setMode(OF_PRIMITIVE_TRIANGLES);
+        //mesh.setupIndicesAuto();
+        for(int x = 0; x<num_particles_width-1; x++)
+        {
+            for(int y=0; y<num_particles_height-1; y++)
+            {
+                //ofFloatColor color(float(x) / num_particles_width, float(y) / num_particles_height, 0.f);
+                ofFloatColor color(0.8f);
+                
+                drawTriangle(getParticle(x+1,y),getParticle(x,y),getParticle(x,y+1),color);
+                drawTriangle(getParticle(x+1,y+1),getParticle(x+1,y),getParticle(x,y+1),color);
+                
+                Particle* p0 = getParticle(x,y);
+                //ofDrawLine(p0->getPos(), p0->getPos() + (normalize(p0->getNormal()) * 2.f) );
+            }
+        }
+    }
 
 	/* 
 	drawing the cloth as a smooth shaded (and colored according to column) OpenGL triangular mesh
@@ -185,47 +254,9 @@ public:
 	(x,y+1) *--* (x+1,y+1)
 	*/
 
-	void drawShaded()
+	void draw(ofPolyRenderMode polyMode)
 	{
-		std::vector<Particle>::iterator particle;
-		for(particle = particles.begin(); particle != particles.end(); particle++)
-		{
-			(*particle).resetNormal();
-		}
-
-		for(int x = 0; x<num_particles_width-1; x++)
-		{
-			for(int y=0; y<num_particles_height-1; y++)
-			{
-				vec3 normal = calcTriangleNormal(getParticle(x+1,y),getParticle(x,y),getParticle(x,y+1));
-				getParticle(x+1,y)->addToNormal(normal);
-				getParticle(x,y)->addToNormal(normal);
-				getParticle(x,y+1)->addToNormal(normal);
-
-				normal = calcTriangleNormal(getParticle(x+1,y+1),getParticle(x+1,y),getParticle(x,y+1));
-				getParticle(x+1,y+1)->addToNormal(normal);
-				getParticle(x+1,y)->addToNormal(normal);
-				getParticle(x,y+1)->addToNormal(normal);
-			}
-		}
-
-		glBegin(GL_TRIANGLES);
-		for(int x = 0; x<num_particles_width-1; x++)
-		{
-			for(int y=0; y<num_particles_height-1; y++)
-			{
-//                vec3 color(0,0,0);
-//                if (x%2)
-//                    color = vec3(0.2f,0.2f,0.8f);
-//                else
-//                    color = vec3(1.0f,1.0f,1.0f);
-                vec3 color(0.8f);
-                
-				drawTriangle(getParticle(x+1,y),getParticle(x,y),getParticle(x,y+1),color);
-				drawTriangle(getParticle(x+1,y+1),getParticle(x+1,y),getParticle(x,y+1),color);
-			}
-		}
-		glEnd();
+        mesh.draw(polyMode);
 	}
 
 	void timeStep()
