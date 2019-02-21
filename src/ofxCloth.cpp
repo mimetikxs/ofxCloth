@@ -3,7 +3,7 @@
 
 using namespace glm;
 
-void Clothing::setup( int w, int h, int numPartWidth, int numPartHeight ){
+void Clothing::setup( float w, float h, int numPartWidth, int numPartHeight ){
 	cloth1 = new Cloth(  w, h, numPartWidth, numPartHeight );
 }
 

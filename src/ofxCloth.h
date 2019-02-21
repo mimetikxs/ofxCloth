@@ -12,7 +12,7 @@ class Clothing
 	vector<glm::vec3> ball_pos; 
 	vector<float> ball_radius; 
 
-	void setup( int w, int h, int numPartWidth, int numPartHeight );
+	void setup( float w, float h, int numPartWidth, int numPartHeight );
 	vector<ofVec3f> getPositionSphere();
 	int getPlaneWidth();
 	int getPlaneHeight();
