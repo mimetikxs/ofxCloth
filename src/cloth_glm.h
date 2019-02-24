@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ofMain.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
